@@ -5,13 +5,28 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
         {
-            path: '/',
+            path: '/dashboard',
             component: AppLayout,
             children: [
                 {
-                    path: '/',
+                    path: '',
                     name: 'dashboard',
                     component: () => import('@/views/Dashboard.vue')
+                },
+                {
+                    path: '/patient',
+                    name: 'patient',
+                    component: () => import('@/views/pages/Patient.vue')
+                },
+                {
+                    path: '/product',
+                    name: 'list',
+                    component: () => import('@/views/uikit/ListDoc.vue')
+                },
+                {
+                    path: '/detail',
+                    name: 'detail',
+                    component: () => import('@/views/pages/Detail.vue')
                 },
                 {
                     path: '/uikit/formlayout',
@@ -32,11 +47,6 @@ const router = createRouter({
                     path: '/uikit/table',
                     name: 'table',
                     component: () => import('@/views/uikit/TableDoc.vue')
-                },
-                {
-                    path: '/uikit/list',
-                    name: 'list',
-                    component: () => import('@/views/uikit/ListDoc.vue')
                 },
                 {
                     path: '/uikit/tree',
@@ -118,7 +128,7 @@ const router = createRouter({
         },
 
         {
-            path: '/auth/login',
+            path: '/',
             name: 'login',
             component: () => import('@/views/pages/auth/Login.vue')
         },
@@ -133,6 +143,40 @@ const router = createRouter({
             component: () => import('@/views/pages/auth/Error.vue')
         }
     ]
+});
+
+router.beforeEach((to, from, next) => {
+    const publicPages = ['login', 'error', 'notfound', 'landing'];
+    const authRequired = !publicPages.includes(to.name?.toString() ?? '');
+
+    const authData = JSON.parse(localStorage.getItem('authData') || '{}');
+    const isLoggedIn = authData.isLoggedIn == true;
+    const user = authData.user || null;
+
+    const roleAccessMap = {
+        pendaftaran: ['dashboard', 'patient', 'detail', 'accessDenied'],
+        perawat: ['dashboard', 'input', 'detail', 'accessDenied'],
+        dokter: ['dashboard', 'button', 'detail', 'accessDenied'],
+        apoteker: ['dashboard', 'list', 'detail', 'accessDenied']
+    };
+
+    if (authRequired && !isLoggedIn) {
+        return next({ name: 'login' });
+    }
+
+    if (to.name == 'login' && isLoggedIn) {
+        return next({ name: 'dashboard' });
+    }
+
+    if (isLoggedIn && user) {
+        const allowedRoutes = roleAccessMap[user.role] || [];
+
+        if (!allowedRoutes.includes(to.name)) {
+            return next({ name: 'accessDenied' });
+        }
+    }
+
+    next();
 });
 
 export default router;

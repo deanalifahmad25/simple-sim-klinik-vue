@@ -215,7 +215,8 @@ function getStatusLabel(status) {
                 </div>
                 <div>
                     <label for="description" class="block font-bold mb-3">Description</label>
-                    <Textarea id="description" v-model="product.description" required="true" rows="3" cols="20" fluid />
+                    
+                    
                 </div>
                 <div>
                     <label for="inventoryStatus" class="block font-bold mb-3">Inventory Status</label>
